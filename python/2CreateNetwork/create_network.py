@@ -1,16 +1,13 @@
 import time
 import numpy as np
+from pathlib import Path
+from tqdm import tqdm
 
-def create_network(all_papers):    
-    keyword_list = '2CreateNetwork\\keyword_list.lst'
-    all_KW=[]
+
+def create_network(all_papers):
+    keyword_list = Path('2CreateNetwork/keyword_list.lst')
     with open(keyword_list) as fp:
-       line = fp.readline()
-       while line:
-           all_KW.append(line[0:-1])
-           line = fp.readline()
-
-    #all_KW=all_KW[0:700]
+        all_KW = [s.strip() for s in fp.readlines()]
 
     padding_str=''
     for ii in range(1000):
@@ -21,11 +18,11 @@ def create_network(all_papers):
     network_T=np.frompyfunc(list, 0, 1)(np.empty((len(all_KW),len(all_KW)), dtype=object))
     nn=np.zeros((len(all_KW),len(all_KW)))
     cc_papers=0
-    for article in all_papers:
+    all_papers_pbar = tqdm(all_papers)
+    for article in all_papers_pbar:
         if cc_papers%10==0:
-            print('Paper ',cc_papers,'/',len(all_papers))    
-            print('Title: ',article[1])
-       
+            all_papers_pbar.set_description(f'{article[1][0:50]}...')
+
         cc_papers+=1
 
         full_text=article[1]+' '+article[2]
@@ -57,8 +54,8 @@ def create_network(all_papers):
         for ii in range(len(found_KW)-1):
             for jj in range(ii+1,len(found_KW)):
                 network_T[found_KW[ii],found_KW[jj]].append(int(article[0][0:4]))
-                network_T[found_KW[jj],found_KW[ii]].append(int(article[0][0:4]))               
-                
+                network_T[found_KW[jj],found_KW[ii]].append(int(article[0][0:4]))
+
                 nn[found_KW[ii],found_KW[jj]]+=1
                 nn[found_KW[jj],found_KW[ii]]+=1
 
