@@ -2,6 +2,12 @@ import time
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
+from scipy.sparse import dok_matrix
+import logging
+
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 
 def create_network(all_papers):
@@ -14,8 +20,11 @@ def create_network(all_papers):
         padding_str=padding_str+' '
 
     line=[ [] for _ in range(5)]
-    print('Creating Network Template')
-    network_T=np.frompyfunc(list, 0, 1)(np.empty((len(all_KW),len(all_KW)), dtype=object))
+    LOG.info('Creating Network Template')
+    all_networks = {}
+    network_T = np.empty((len(all_KW), len(all_KW)))
+    network_T[:] = np.nan
+    network_T = network_T.astype(object)
     nn=np.zeros((len(all_KW),len(all_KW)))
     cc_papers=0
     all_papers_pbar = tqdm(all_papers)
@@ -50,13 +59,19 @@ def create_network(all_papers):
             kw_idx+=1
 
         found_KW=list(set(found_KW))
-
         for ii in range(len(found_KW)-1):
             for jj in range(ii+1,len(found_KW)):
-                network_T[found_KW[ii],found_KW[jj]].append(int(article[0][0:4]))
-                network_T[found_KW[jj],found_KW[ii]].append(int(article[0][0:4]))
+                year = int(article[0][0:4])
+                if year not in all_networks:
+                    all_networks[year] = dok_matrix((len(all_KW), len(all_KW)))
+                all_networks[year][found_KW[ii],found_KW[jj]] = 1
+                all_networks[year][found_KW[jj], found_KW[ii]] = 1
 
-                nn[found_KW[ii],found_KW[jj]]+=1
-                nn[found_KW[jj],found_KW[ii]]+=1
+                nn[found_KW[ii],found_KW[jj]] += 1
+                nn[found_KW[jj],found_KW[ii]] += 1
 
-    return network_T, nn, all_KW
+    all_years = np.array(list(all_networks.keys()))
+    all_years.sort()
+    LOG.info(f'Made network for years {all_years}.')
+
+    return all_networks, nn, all_KW, all_years
