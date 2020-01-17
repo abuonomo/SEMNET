@@ -1,8 +1,9 @@
 import numpy as np
 from pathlib import Path
 
-def collaps_synonyms(network_T_full,nn_full,all_KW_full):
-    synonym_list = Path(__file__).parent.absolute() / Path('SynonymList.lst')
+DEFAULT_SYN_LOC = Path(__file__).parent.absolute() / Path('SynonymList.lst')
+
+def collaps_synonyms(network_T_full,nn_full,all_KW_full, synonym_list: Path = DEFAULT_SYN_LOC):
     all_syn=[[]]
     syn_count=0
     with open(synonym_list) as fp:
@@ -57,9 +58,9 @@ def collaps_synonyms(network_T_full,nn_full,all_KW_full):
     return network_T_full,nn_full,all_KW_full
             
 
-def collaps_network(network_T_full,nn_full,all_KW_full):
+def collaps_network(network_T_full,nn_full,all_KW_full, synonym_list):
     # Remove keywords that are synonyms, but keep their information
-    network_T_full,nn_full,all_KW_full=collaps_synonyms(network_T_full,nn_full,all_KW_full)
+    network_T_full,nn_full,all_KW_full=collaps_synonyms(network_T_full,nn_full,all_KW_full, synonym_list)
     print('collaps_network - Finished collapsing synonyms')
 
     degree=sum(np.heaviside(nn_full,0))
