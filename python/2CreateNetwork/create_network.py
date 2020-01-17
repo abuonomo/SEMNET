@@ -3,8 +3,8 @@ import numpy as np
 import time
 from pathlib import Path
 
-def create_network(all_papers):    
-    keyword_list = Path('2CreateNetwork/keyword_list.lst')
+def create_network(all_papers):
+    keyword_list = Path(__file__).parent.absolute() / Path('keyword_list.lst')
     all_KW=[]
     KW_length=[]
     print('create_network - For debugging reasons, only 1500 KWs are used')
