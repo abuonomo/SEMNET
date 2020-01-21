@@ -105,7 +105,7 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
             w_mtx2[ii,jj]=np.sqrt(degrees[ii]*degrees[jj])/(single_net[ii,jj]+epsilon)
     
     print('calculate_all_network_properties_per_year - calculating the weighted distances takes very long (deactivated for the moment)')
-    if True:
+    if False:
         dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
         dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
     else:
