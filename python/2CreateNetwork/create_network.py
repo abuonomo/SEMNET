@@ -11,6 +11,59 @@ LOG.setLevel(logging.INFO)
 DEFAULT_KEYWORD_LOC = Path(__file__).parent.absolute() / Path('keyword_list.lst')
 
 
+def get_full_text(article):
+    full_text = article[1] + ' ' + article[2]
+    full_text = full_text.replace("'", "")
+    full_text = full_text.replace("--", "-")
+    full_text = full_text.replace("ö", "oe")
+    full_text = full_text.replace("ä", "ae")
+    full_text = full_text.replace("ü", "ue")
+    full_text = full_text.replace('{\"o}', 'oe')
+    full_text = full_text.replace('\\', '')
+    full_text = full_text.lower()
+    return full_text
+
+
+def remove_brackets(full_text: str) -> str:
+    """
+    Remove brackets, for example: Clauser-Horne (CH) inequality, in a separate string.
+    Thus have two abstracts that can be disaminated
+
+    Args:
+        full_text: text to remove brackets from
+
+    Returns:
+        text with removed brackets
+    """
+    if '(' in full_text:  # Remove brakets, for example: Clauser-Horne (CH) inequality, in a separate string. Thus have two abstracts that can be disaminated
+        idx = full_text.find('(') + 1
+        new_full_text = full_text[0:idx - 1]
+        bracket_count = 1
+        while idx < len(full_text):
+            if bracket_count == 0:
+                new_full_text += full_text[idx]
+
+            if full_text[idx] == '(':
+                bracket_count += 1
+            if full_text[idx] == ')':
+                bracket_count -= 1
+
+            idx += 1
+
+        full_text = full_text + " " + new_full_text.replace('  ', ' ')
+    return full_text
+
+
+def get_found_kw(full_text, sorted_KW_idx, all_KW):
+    found_KW = []
+    for kw_idx in sorted_KW_idx:
+        if all_KW[kw_idx] in full_text:
+            found_KW.append(kw_idx)
+            full_text = full_text.replace(all_KW[kw_idx], '')
+    found_KW = list(set(found_KW))
+    return found_KW
+
+
 def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1500):
     with open(keyword_list) as fp:
         all_KW = [line.strip() for line in fp.readlines()]
@@ -25,8 +78,7 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1
     for ii in range(1000):
         padding_str=padding_str+' '
 
-    line=[ [] for _ in range(5)]
-    print('Creating Network Template')
+    LOG.info('Creating Network Template')
     network_T=np.frompyfunc(list, 0, 1)(np.empty((len(all_KW),len(all_KW)), dtype=object))
     nn=np.zeros((len(all_KW),len(all_KW)))
     cc_papers=0
@@ -37,48 +89,10 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1
         # such that one number carries both the year-info and the paper id in the for YYYY.IDIDID
         paper_id=random.random()
         
-        if cc_papers%10==0:
-            all_papers_pbar.set_description(f'Title: {article[1][0:40]}...')
-
         cc_papers+=1
-
-        full_text=article[1]+' '+article[2]
-        full_text=full_text.replace("'","")
-        full_text=full_text.replace("--","-")
-        full_text=full_text.replace("ö","oe")
-        full_text=full_text.replace("ä","ae")
-        full_text=full_text.replace("ü","ue")
-        full_text=full_text.replace('{\"o}','oe')
-        full_text=full_text.replace('\\','')
-        full_text=full_text.lower()
-
-        if '(' in full_text: # Remove brakets, for example: Clauser-Horne (CH) inequality, in a separate string. Thus have two abstracts that can be disaminated
-            idx=full_text.find('(')+1
-            new_full_text=full_text[0:idx-1]
-            bracket_count=1
-            while idx<len(full_text):
-                if bracket_count==0:
-                    new_full_text+=full_text[idx]
-                    
-                if full_text[idx]=='(':
-                    bracket_count+=1
-                if full_text[idx]==')':
-                    bracket_count-=1            
-        
-                idx+=1
-                
-            full_text=full_text+" "+new_full_text.replace('  ',' ')
-        
-        found_KW=[]
-        # kw_idx=0
-        for kw_idx in sorted_KW_idx:
-            if all_KW[kw_idx] in full_text:
-                found_KW.append(kw_idx)
-                pos_of_kw=full_text.find(all_KW[kw_idx])
-                full_text=full_text[0:pos_of_kw]+full_text[pos_of_kw+len(all_KW[kw_idx]):]
-            # kw_idx+=1
-
-        found_KW=list(set(found_KW))
+        full_text = get_full_text(article)
+        full_text = remove_brackets(full_text)
+        found_KW = get_found_kw(full_text, sorted_KW_idx, all_KW)
 
         for ii in range(len(found_KW)-1):
             for jj in range(ii+1,len(found_KW)):
