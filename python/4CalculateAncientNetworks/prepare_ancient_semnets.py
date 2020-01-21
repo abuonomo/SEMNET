@@ -1,11 +1,14 @@
 import numpy as np
+from tqdm import tqdm
 
 def create_ancient_networks(network_T,nn,all_KW,y_start,y_end):
     ancient_nns=[]
     ancient_nums=[]
     
     # probably quite inefficient method
+    year_pbar = tqdm(range(y_start,y_end+1), total=(y_end+1) - y_start)
     for year in range(y_start,y_end+1):
+        year_pbar.set_description(str(year))
         curr_nn=np.zeros(network_T.shape)
         all_id_coll=[]
         for ccx in range(len(network_T)):
@@ -22,7 +25,5 @@ def create_ancient_networks(network_T,nn,all_KW,y_start,y_end):
             all_id_coll.append(len(set(all_ids)))
         ancient_nns.append(curr_nn)
         ancient_nums.append(all_id_coll)
-        
-        print('create_ancient_networks: Finished year ', year)
         
     return(all_KW,ancient_nns,ancient_nums)
