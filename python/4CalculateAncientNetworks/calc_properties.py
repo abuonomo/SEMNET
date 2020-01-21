@@ -2,6 +2,7 @@ import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 import networkx as nx
+from scipy.sparse.csgraph import shortest_path
 
 def distance_between_nodes(mat):
     G=nx.from_numpy_matrix(np.matrix(mat))
@@ -72,7 +73,8 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
         for ii in range(2,5):
             all_properties.append(path_N(curr_mat,ii))
         
-    dist_mtx=distance_between_nodes(single_net)
+    dist_mtx = shortest_path(single_net, unweighted=True)
+    dist_mtx = dist_mtx[np.isinf(dist_mtx)] = 10.
     all_properties.append(dist_mtx)
     
     
@@ -87,8 +89,8 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
     
     print('calculate_all_network_properties_per_year - calculating the weighted distances takes very long (deactivated for the moment)')
     if False:
-        dist_mtx1=distance_between_nodes_weighted(w_mtx1)
-        dist_mtx2=distance_between_nodes_weighted(w_mtx2)
+        dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
+        dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
     else:
         dist_mtx1=np.zeros(w_mtx1.shape)
         dist_mtx2=np.zeros(w_mtx1.shape)

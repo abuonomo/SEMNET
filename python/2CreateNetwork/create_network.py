@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from tqdm import tqdm
 
-DEFAULT_KEYWORD_LOC=Path(__file__).parent.absolute() / Path('keyword_list.lst')
+DEFAULT_KEYWORD_LOC = Path(__file__).parent.absolute() / Path('keyword_list.lst')
 
 def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1500):
     print('create_network - For debugging reasons, only 1500 KWs are used')
@@ -35,9 +35,7 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1
         
         if cc_papers%10==0:
             all_papers_pbar.set_description(f'Title: {article[1][0:40]}...')
-            # print('Paper ',cc_papers,'/',len(all_papers))
-            # print('Title: ',article[1])
-       
+
         cc_papers+=1
 
         full_text=article[1]+' '+article[2]
