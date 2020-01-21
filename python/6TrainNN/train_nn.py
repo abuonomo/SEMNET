@@ -3,7 +3,11 @@ from torch import nn
 from random import shuffle
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
 
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 class ff_network(nn.Module):
 
@@ -109,7 +113,7 @@ def train_model(data_train0, data_test0, data_train1, data_test1, lr_enc, batch_
 
         if epoch%10==0:
             info_str='epoch: '+str(epoch)+' - totalloss: ',np.mean(real_loss_train_num0)+np.mean(real_loss_train_num1) ,'; l1/l2: '+str(np.mean(real_loss_train_num0))+'/'+str(np.mean(real_loss_train_num1))+'; total: ',np.mean(real_loss_test_num0)+np.mean(real_loss_test_num1) ,' ts1/ts2: '+str(np.mean(real_loss_test_num0))+'/'+str(np.mean(real_loss_test_num1))
-            print('train_model: ',info_str)
+            LOG.info(f'train_model: {info_str}')
         model_semnet.train()
         
         
@@ -146,10 +150,10 @@ def train_nn_one_instance(data_0,data_1,model_semnet):
     data_train1=data_1[0:idx_traintest]    
     data_test1=data_1[idx_traintest:]
     
-    print('train_nn_one_instance - start training')
+    LOG.info('train_nn_one_instance - start training')
     bestval_no=train_model(data_train0, data_test0, data_train1, data_test1, lr_enc, batch_size)    
 
-    print('train_nn_one_instance - Calculate ROC')
+    LOG.info('train_nn_one_instance - Calculate ROC')
     
     
     return bestval_no
@@ -165,14 +169,14 @@ def calculate_ROC(data_0,data_1,model_semnet):
     future_data_0=model_semnet(data_0).detach().cpu().numpy()
     future_data_1=model_semnet(data_1).detach().cpu().numpy()
     
-    print(future_data_0.shape)
-    print(future_data_1.shape)
+    LOG.info(future_data_0.shape)
+    LOG.info(future_data_1.shape)
     
     all_pred=np.concatenate([future_data_0,future_data_1])
     corr_answers=np.array([0] * len(future_data_0) + [1] * len(future_data_1))
     idx1=np.flip(np.argsort(all_pred,axis=0)) # indices from strongest predicted connection to shortest one
     
-    print(corr_answers.shape)
+    LOG.info(corr_answers.shape)
     corr_answers_sorted=corr_answers[idx1]
     
     xpos=[0]
@@ -196,7 +200,7 @@ def calculate_ROC(data_0,data_1,model_semnet):
     plt.show()
         
     AUC=sum(ROC_vals)/len(ROC_vals)
-    print('Area Under Curve: ', AUC,'\n\n\n')
+    LOG.info(f'Area Under Curve: {AUC}\n\n\n')
             
     return future_data_0, future_data_1   
 
@@ -204,12 +208,12 @@ def calculate_ROC(data_0,data_1,model_semnet):
 
 def train_nn(all_data_0, all_data_1, prediction_distance, start_year):
     for y in range(len(all_data_0[1:3])):
-        print('train_nn - year ',start_year+y+2)  
+        LOG.info(f'train_nn - year {start_year+y+2}')
     
         model_semnet = ff_network()
         train_nn_one_instance(all_data_0[y],all_data_1[y],model_semnet)
-        print('train_nn - finished - year ',start_year+y+2)
-        print('Calculate ROC & AUC')
+        LOG.info(f'train_nn - finished - year {start_year+y+2}')
+        LOG.info('Calculate ROC & AUC')
         
         if y+prediction_distance<len(all_data_0):
             future_data_0, future_data_1 = calculate_ROC(all_data_0[y+prediction_distance],all_data_1[y+prediction_distance],model_semnet)

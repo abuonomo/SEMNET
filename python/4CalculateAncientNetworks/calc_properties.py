@@ -118,7 +118,7 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
 def calculate_all_network_properties(evolving_nets,evolving_nums):
     all_properties_years=[]
     evolving_nets_pbar = tqdm(range(2,len(evolving_nets)), total=len(evolving_nets)-2)
-    print('calculate_all_network_properties')
+    LOG.info('calculate_all_network_properties')
     for ii in evolving_nets_pbar:
         current_all_properties=calculate_all_network_properties_per_year(
             evolving_nets[ii],

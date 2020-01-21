@@ -1,4 +1,10 @@
 import numpy as np
+import logging
+
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+
 
 def prepare_training_for_curr_year(semnet_now,semnet_future,all_properties_now):
     delta_semnet=semnet_future-semnet_now
@@ -38,7 +44,7 @@ def prepare_training_data(evolving_nets,all_properties,prediction_distance,start
     all_data_0=[]
     all_data_1=[]
     for ii in range(len(all_properties)-prediction_distance):
-        print('prepare_training_data: Year Now: ',start_year+ii+2,'; Year Future: ',start_year+ii+2+prediction_distance)
+        LOG.info(f'Year Now: {start_year+ii+2}; Year Future: {start_year+ii+2+prediction_distance}')
         data_0, data_1=prepare_training_for_curr_year(evolving_nets[ii+2],evolving_nets[ii+2+prediction_distance],all_properties[ii])
         all_data_0.append(data_0)
         all_data_1.append(data_1)

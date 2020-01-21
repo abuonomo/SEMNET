@@ -66,7 +66,7 @@ def collaps_synonyms(network_T_full,nn_full,all_KW_full, synonym_list: Path = DE
 def collaps_network(network_T_full,nn_full,all_KW_full, synonym_list=DEFAULT_SYN_LOC):
     # Remove keywords that are synonyms, but keep their information
     network_T_full,nn_full,all_KW_full=collaps_synonyms(network_T_full,nn_full,all_KW_full, synonym_list)
-    print('collaps_network - Finished collapsing synonyms')
+    LOG.info('collaps_network - Finished collapsing synonyms')
 
     degree = np.count_nonzero(nn_full, 1)
     non_zero_inds = np.argwhere(degree > 0).flatten()
