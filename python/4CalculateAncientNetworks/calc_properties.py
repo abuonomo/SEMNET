@@ -3,6 +3,12 @@ from numpy import dot
 from numpy.linalg import norm
 import networkx as nx
 from scipy.sparse.csgraph import shortest_path
+from tqdm import tqdm
+import logging
+
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 def distance_between_nodes(mat):
     G=nx.from_numpy_matrix(np.matrix(mat))
@@ -52,32 +58,44 @@ def path_N(mtx,N):
     return path_N_mtx
 
 
-def calculate_all_network_properties_per_year(single_net,single_netYM1,single_netYM2,evolving_nums):
+def log_or_pbar(msg, pbar):
+    if pbar is not None:
+        pbar.set_description(msg)
+    else:
+        LOG.info(msg)
+
+
+def calculate_all_network_properties_per_year(single_net,single_netYM1,single_netYM2,evolving_nums, pbar=None):
     # we create 17 matrices of properties
     # numsA, numsB, degA, degB (those vectors need to be stored only once)
     # cosS, 
     # path2Y,path2YM1,path2YM2,path3Y,path3YM1,path3YM2,path4Y,path4YM1,path4YM2
     # distance, weighted_distance_1, weighted_distance_2
     # Those properties have been used based on heuristic tests, probably there is a lot of room for improvements
-    
+
+    log_or_pbar("numsA, numsB, degA, degB", pbar)
     all_properties=[]
     all_properties.append(np.array(evolving_nums))
     
     degrees=np.count_nonzero(single_net,axis=0)
     all_properties.append(degrees/max(degrees))
-    
+
+    log_or_pbar("cosS", pbar)
     cos_sim = cos_similarity(single_net)
     all_properties.append(cos_sim)
 
+    log_or_pbar("paths", pbar)
     for curr_mat in [single_net,single_netYM1,single_netYM2]:
         for ii in range(2,5):
             all_properties.append(path_N(curr_mat,ii))
-        
+
+    log_or_pbar("distance", pbar)
     dist_mtx = shortest_path(single_net, unweighted=True)
-    dist_mtx = dist_mtx[np.isinf(dist_mtx)] = 10.
+    dist_mtx[np.isinf(dist_mtx)] = 10.
     all_properties.append(dist_mtx)
-    
-    
+
+
+    log_or_pbar("weighted distance", pbar)
     epsilon=10**(-4) # simple way to avoid runtime warning, div by zero (which has no consequence for result)
     w_mtx1=np.zeros(single_net.shape)
     w_mtx2=np.zeros(single_net.shape)
@@ -86,9 +104,8 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
             w_mtx1[ii,jj]=degrees[ii]*degrees[jj]/(single_net[ii,jj]+epsilon)
             w_mtx2[ii,jj]=np.sqrt(degrees[ii]*degrees[jj])/(single_net[ii,jj]+epsilon)
     
-    
     print('calculate_all_network_properties_per_year - calculating the weighted distances takes very long (deactivated for the moment)')
-    if False:
+    if True:
         dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
         dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
     else:
@@ -104,9 +121,16 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
 
 def calculate_all_network_properties(evolving_nets,evolving_nums):
     all_properties_years=[]
-    for ii in range(2,len(evolving_nets)):  
-        print('calculate_all_network_properties - ',ii,'/',len(evolving_nets))
-        current_all_properties=calculate_all_network_properties_per_year(evolving_nets[ii],evolving_nets[ii-1],evolving_nets[ii-2],evolving_nums[ii])
+    evolving_nets_pbar = tqdm(range(2,len(evolving_nets)), total=len(evolving_nets)-2)
+    print('calculate_all_network_properties')
+    for ii in evolving_nets_pbar:
+        current_all_properties=calculate_all_network_properties_per_year(
+            evolving_nets[ii],
+            evolving_nets[ii-1],
+            evolving_nets[ii-2],
+            evolving_nums[ii],
+            pbar=evolving_nets_pbar,
+        )
         all_properties_years.append(current_all_properties)
     
     return all_properties_years
