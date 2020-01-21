@@ -97,14 +97,13 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
 
     log_or_pbar("weighted distance", pbar)
     epsilon=10**(-4) # simple way to avoid runtime warning, div by zero (which has no consequence for result)
-    w_mtx1=np.zeros(single_net.shape)
-    w_mtx2=np.zeros(single_net.shape)
-    for ii in range(len(single_net)):
-        for jj in range(len(single_net)):
-            w_mtx1[ii,jj]=degrees[ii]*degrees[jj]/(single_net[ii,jj]+epsilon)
-            w_mtx2[ii,jj]=np.sqrt(degrees[ii]*degrees[jj])/(single_net[ii,jj]+epsilon)
-    
-    print('calculate_all_network_properties_per_year - calculating the weighted distances takes very long (deactivated for the moment)')
+    out_degrees = np.outer(degrees, degrees)
+    out_degrees_sqrt = np.sqrt(out_degrees)
+    tmp_sing = single_net + epsilon
+    w_mtx1 = out_degrees / tmp_sing
+    w_mtx2 = out_degrees_sqrt / tmp_sing
+
+    # calculating the weighted distances takes very long (deactivated for the moment)')
     if False:
         dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
         dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
