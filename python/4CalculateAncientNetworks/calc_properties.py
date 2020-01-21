@@ -89,29 +89,26 @@ def calculate_all_network_properties_per_year(single_net,single_netYM1,single_ne
         for ii in range(2,5):
             all_properties.append(path_N(curr_mat,ii))
 
+    uncon_nodes_num = 10.
     log_or_pbar("distance", pbar)
     dist_mtx = shortest_path(single_net, unweighted=True)
-    dist_mtx[np.isinf(dist_mtx)] = 10.
+    dist_mtx[np.isinf(dist_mtx)] = uncon_nodes_num  # unconnected nodes set to a large number
     all_properties.append(dist_mtx)
 
-
     log_or_pbar("weighted distance", pbar)
-    epsilon=10**(-4) # simple way to avoid runtime warning, div by zero (which has no consequence for result)
+    epsilon=10**(-4)  # simple way to avoid runtime warning, div by zero (which has no consequence for result)
     out_degrees = np.outer(degrees, degrees)
     out_degrees_sqrt = np.sqrt(out_degrees)
     tmp_sing = single_net + epsilon
     w_mtx1 = out_degrees / tmp_sing
     w_mtx2 = out_degrees_sqrt / tmp_sing
 
-    # calculating the weighted distances takes very long (deactivated for the moment)')
-    if False:
-        dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
-        dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
-    else:
-        dist_mtx1=np.zeros(w_mtx1.shape)
-        dist_mtx2=np.zeros(w_mtx1.shape)
-        
-    all_properties.append(dist_mtx1)    
+    dist_mtx1 = shortest_path(w_mtx1, unweighted=False)
+    dist_mtx1[np.isinf(dist_mtx1)] = uncon_nodes_num
+    dist_mtx2 = shortest_path(w_mtx2, unweighted=False)
+    dist_mtx2[np.isinf(dist_mtx2)] = uncon_nodes_num
+
+    all_properties.append(dist_mtx1)
     all_properties.append(dist_mtx2)   
     
     return all_properties
