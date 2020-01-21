@@ -1,17 +1,21 @@
 import random
 import numpy as np
-import time
 from pathlib import Path
 from tqdm import tqdm
+import logging
+
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 DEFAULT_KEYWORD_LOC = Path(__file__).parent.absolute() / Path('keyword_list.lst')
 
+
 def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1500):
-    print('create_network - For debugging reasons, only 1500 KWs are used')
-    time.sleep(3)
     with open(keyword_list) as fp:
         all_KW = [line.strip() for line in fp.readlines()]
     if limit is not None:
+        LOG.info(f'For debugging reasons, only {limit} KWs are used')
         all_KW = all_KW[0:limit]
     KW_length = [len(kwd) for kwd in all_KW]
 
@@ -66,13 +70,13 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1
             full_text=full_text+" "+new_full_text.replace('  ',' ')
         
         found_KW=[]
-        kw_idx=0
+        # kw_idx=0
         for kw_idx in sorted_KW_idx:
-            if full_text.find(all_KW[kw_idx])>=0:
+            if all_KW[kw_idx] in full_text:
                 found_KW.append(kw_idx)
                 pos_of_kw=full_text.find(all_KW[kw_idx])
                 full_text=full_text[0:pos_of_kw]+full_text[pos_of_kw+len(all_KW[kw_idx]):]
-            kw_idx+=1
+            # kw_idx+=1
 
         found_KW=list(set(found_KW))
 
