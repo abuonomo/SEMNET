@@ -48,7 +48,7 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1
         full_text=full_text.replace('\\','')
         full_text=full_text.lower()
 
-        if full_text.find('(')>=0: # Remove brakets, for example: Clauser-Horne (CH) inequality, in a separate string. Thus have two abstracts that can be disaminated
+        if '(' in full_text: # Remove brakets, for example: Clauser-Horne (CH) inequality, in a separate string. Thus have two abstracts that can be disaminated
             idx=full_text.find('(')+1
             new_full_text=full_text[0:idx-1]    
             bracket_count=1
