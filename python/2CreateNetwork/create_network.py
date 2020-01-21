@@ -2,21 +2,18 @@ import random
 import numpy as np
 import time
 from pathlib import Path
+from tqdm import tqdm
 
 DEFAULT_KEYWORD_LOC=Path(__file__).parent.absolute() / Path('keyword_list.lst')
 
-def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC):
-    all_KW=[]
-    KW_length=[]
+def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC, limit=1500):
     print('create_network - For debugging reasons, only 1500 KWs are used')
     time.sleep(3)
     with open(keyword_list) as fp:
-        line = fp.readline()
-        while line:
-            if len(all_KW)<1500: # this helps reducing the time for debugging...
-                all_KW.append(line[0:-1])
-                KW_length.append(len(line[0:-1]))
-            line = fp.readline()
+        all_KW = [line.strip() for line in fp.readlines()]
+    if limit is not None:
+        all_KW = all_KW[0:limit]
+    KW_length = [len(kwd) for kwd in all_KW]
 
     sorted_KW_idx=np.argsort(KW_length)[::-1] # indices of KWs from largest to smallest
 
@@ -29,15 +26,17 @@ def create_network(all_papers, keyword_list: Path = DEFAULT_KEYWORD_LOC):
     network_T=np.frompyfunc(list, 0, 1)(np.empty((len(all_KW),len(all_KW)), dtype=object))
     nn=np.zeros((len(all_KW),len(all_KW)))
     cc_papers=0
-    for article in all_papers:
+    all_papers_pbar = tqdm(all_papers)
+    for article in all_papers_pbar:
         # quasi-unique paper identifier:
         # this number between (0,1) will be added to the year in SemNet
         # such that one number carries both the year-info and the paper id in the for YYYY.IDIDID
         paper_id=random.random()
         
         if cc_papers%10==0:
-            print('Paper ',cc_papers,'/',len(all_papers))    
-            print('Title: ',article[1])
+            all_papers_pbar.set_description(f'Title: {article[1][0:40]}...')
+            # print('Paper ',cc_papers,'/',len(all_papers))
+            # print('Title: ',article[1])
        
         cc_papers+=1
 
